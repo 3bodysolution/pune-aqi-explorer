@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pune Air Quality Explorer</title>
+  <meta name="description" content="Explore Pune air quality: live model estimate, station-level daily AQI since 2017, seasons, regions and pollutants.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#live">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <h1>Pune Air Quality Explorer</h1>
+      <span class="badge" id="data-badge">Data: loading…</span>
+    </div>
+  </header>
+  <nav class="topnav" aria-label="Sections">
+    <div class="wrap">
+      <ul>
+        <li><a href="#live">Live now</a></li>
+        <li><a href="#insights">Insights</a></li>
+        <li><a href="#explorer">Daily AQI</a></li>
+        <li><a href="#calendar">Calendar</a></li>
+        <li><a href="#trends">Trends</a></li>
+        <li><a href="#regions">Regions</a></li>
+        <li><a href="#seasons">Seasons</a></li>
+        <li><a href="#pollutants">Pollutants</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <div id="global-error" class="notice error" hidden></div>
+
+    <!-- 1. Live -->
+    <section id="live" class="card">
+      <h2>Live now</h2>
+      <p class="lead">Official CPCB AQI from Pune's monitoring stations, updated hourly.</p>
+      <div class="live-grid">
+        <div class="live-now" id="station-now" aria-live="polite">
+          <p class="muted">Loading station readings…</p>
+        </div>
+        <div>
+          <div class="station-list" id="station-list"></div>
+        </div>
+      </div>
+      <p class="small muted" id="station-explain">The CPCB AQI is a <b>24-hour average</b> (CO and ozone: highest 8-hour average). After a short, intense spike — such as Diwali fireworks — it stays high for up to a day even when the air outside has already cleared, which is why the <b>last-hour PM2.5</b> is shown next to each station. Sites that show an "instant" or US-scale AQI will give different numbers.</p>
+
+      <h3 style="margin-top:28px">Model trend &amp; 3-day forecast</h3>
+      <p class="small muted">A city-wide model estimate (not station readings). Models do not capture local events like fireworks, so use it for the trend and the forecast, not for today's exact level.</p>
+      <div class="live-grid">
+        <div class="live-now" id="live-now" aria-live="polite">
+          <p class="muted" id="live-status">Loading live estimate…</p>
+        </div>
+        <div>
+          <div class="chart-wrap tall"><canvas id="chart-live" role="img" aria-label="Bar chart of estimated daily AQI for the past 92 days and the 3-day forecast"></canvas></div>
+          <p class="small muted" id="live-legend" hidden>Solid bars: past model estimates. Lighter outlined bars: forecast days. Gaps: not enough hourly values.</p>
+        </div>
+      </div>
+      <p class="disclaimer">Model estimate (Copernicus CAMS via Open-Meteo, coarse-resolution global model) — not a ground-station reading, may differ from CPCB station values.</p>
+    </section>
+
+    <!-- 2. Insights -->
+    <section id="insights">
+      <h2>Key insights</h2>
+      <div class="cards" id="insight-cards"><p class="muted">Loading…</p></div>
+    </section>
+
+    <!-- 3. Explorer -->
+    <section id="explorer" class="card">
+      <h2>Daily AQI explorer</h2>
+      <div class="controls">
+        <label>Station <select id="exp-station"></select></label>
+        <label>Year <select id="exp-year"></select></label>
+      </div>
+      <div class="chart-wrap tall"><canvas id="chart-explorer" role="img" aria-label="Line chart of daily AQI for the selected station and year"></canvas></div>
+      <div class="legend-cats" id="cat-legend-1"></div>
+      <div id="exp-stats" class="stats"></div>
+    </section>
+
+    <!-- 4. Calendar -->
+    <section id="calendar" class="card">
+      <h2>Calendar heatmap</h2>
+      <p class="lead">Each square is one day, coloured by CPCB category. Grey means no valid data. Follows the station chosen above.</p>
+      <div class="controls">
+        <label>Year <select id="hm-year"></select></label>
+        <span class="muted small" id="hm-title"></span>
+      </div>
+      <div class="scroll-x" id="cal-wrap" tabindex="0" role="region" aria-label="Calendar heatmap, scrollable"></div>
+      <div class="legend-cats" id="cat-legend-2"></div>
+    </section>
+
+    <!-- 5. Trends -->
+    <section id="trends" class="card">
+      <h2>Year-over-year trends</h2>
+      <p class="lead">Mean daily AQI per station per year (only years with enough coverage), with the median of station means in bold.</p>
+      <div class="chart-wrap tall"><canvas id="chart-yoy" role="img" aria-label="Line chart of yearly mean AQI by station"></canvas></div>
+      <p class="note">Data source changes: 2017–23 published hourly AQI; from 2024, AQI computed from pollutant concentrations.</p>
+      <h3>Share of days by category (city median)</h3>
+      <div class="chart-wrap"><canvas id="chart-cats" role="img" aria-label="Stacked bar chart of share of days per AQI category by year"></canvas></div>
+      <p class="small muted" id="cats-note"></p>
+    </section>
+
+    <!-- 6. Regions -->
+    <section id="regions" class="card">
+      <h2>Regions compared</h2>
+      <h3>Stations and yearly means</h3>
+      <p class="small muted">Click a column header to sort. Blank cells: the station did not meet the coverage rule for that year. Long-term mean is over all valid days of that station.</p>
+      <div class="scroll-x" id="region-table-wrap" tabindex="0" role="region" aria-label="Station comparison table, scrollable"></div>
+      <h3>Monthly mean AQI by station</h3>
+      <div class="scroll-x" id="monthly-wrap" tabindex="0" role="region" aria-label="Station by month heatmap, scrollable"></div>
+      <div class="legend-cats" id="cat-legend-3"></div>
+    </section>
+
+    <!-- 7. Seasons -->
+    <section id="seasons" class="card">
+      <h2>Seasons &amp; time of day</h2>
+      <h3>Average AQI by calendar month (city median series)</h3>
+      <div class="chart-wrap"><canvas id="chart-month" role="img" aria-label="Bar chart of average AQI per calendar month"></canvas></div>
+      <h3>Hour-of-day profile</h3>
+      <div class="controls">
+        <label>Station <select id="hr-station"></select></label>
+        <fieldset class="toggles" id="hr-seasons"><legend class="sr">Seasons</legend>
+          <label><input type="checkbox" value="all" checked> All year</label>
+          <label><input type="checkbox" value="winter" checked> Winter (Nov–Feb)</label>
+          <label><input type="checkbox" value="monsoon" checked> Monsoon (Jun–Sep)</label>
+          <label><input type="checkbox" value="other" checked> Other (Mar–May, Oct)</label>
+        </fieldset>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-hour" role="img" aria-label="Line chart of average hourly AQI by hour of day (IST)"></canvas></div>
+    </section>
+
+    <!-- 8. Pollutants -->
+    <section id="pollutants" class="card">
+      <h2>Pollutants (2024 onward)</h2>
+      <p class="lead">Daily mean concentrations since 2024, with reference lines where they exist.</p>
+      <div class="controls">
+        <label>Station <select id="pol-station"></select></label>
+        <label>Pollutant <select id="pol-pollutant"></select></label>
+      </div>
+      <div class="chart-wrap tall"><canvas id="chart-pol" role="img" aria-label="Line chart of daily pollutant concentration"></canvas></div>
+      <p class="small muted" id="pol-note"></p>
+      <h3>What decides the hourly AQI (all stations, since 2024)</h3>
+      <div class="chart-wrap short"><canvas id="chart-drivers" role="img" aria-label="Doughnut chart of dominant pollutant share"></canvas></div>
+      <p class="small muted" id="drivers-note"></p>
+    </section>
+
+    <!-- 9. Methodology -->
+    <section id="methodology" class="card">
+      <h2>Methodology &amp; data</h2>
+      <div id="method-body" class="method"><p class="muted">Loading…</p></div>
+      <h3>Coverage: valid days per station per year</h3>
+      <div class="scroll-x" id="coverage-wrap" tabindex="0" role="region" aria-label="Coverage table, scrollable"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Station data: CPCB / MPCB / IITM, compiled by <a href="https://data.opencity.in/dataset/pune-hourly-air-quality-reports" rel="noopener">data.opencity.in</a>. Live estimates: <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a> / Copernicus CAMS. Not an official source; not health advice.</p>
+    </div>
+  </footer>
+
+  <div id="tip" role="tooltip" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="aqi.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
