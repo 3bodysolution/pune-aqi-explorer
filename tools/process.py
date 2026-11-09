@@ -208,7 +208,7 @@ add('yearly', 'Year-by-year: best and worst years',
     f'Among years with at least 3 stations meeting the coverage bar, {wy} had the highest typical station-average AQI '
     f'({ym[wy]:.0f}) and {by_} the lowest ({ym[by_]:.0f}).',
     dict(by_year=ym, stations_per_year={y: len(c["stations"]) for y, c in city_year.items()}),
-    'The set of stations differs between years, and 2024–25 AQI is computed from concentrations '
+    'The set of stations differs between years, and from 2024 the AQI is computed from pollutant concentrations '
     '(see Methodology), so treat year-to-year changes as indicative.')
 
 lt = {}
